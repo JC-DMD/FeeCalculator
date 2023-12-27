@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fee Calculator</title>
+    <script src="pdf.js"></script>
+    <link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+
+<canvas id="pdf-canvas"></canvas>
+
+<script>
+    // Specify the workerSrc property.
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.js';
+
+    // Asynchronously downloads PDF.
+    pdfjsLib.getDocument('FeeCalculator.pdf').promise.then(function(pdfDoc_) {
+        pdfDoc = pdfDoc_;
+        // Use the first page to get viewport.
+        return pdfDoc.getPage(1);
+    }).then(function(page) {
+        var scale = 1.5;
+        var viewport = page.getViewport({scale: scale});
+        var canvas = document.getElementById('pdf-canvas');
+        var context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        // Render PDF page into canvas context.
+        var renderContext = {
+            canvasContext: context,
+            viewport: viewport
+        };
+        page.render(renderContext);
+    });
+</script>
+
+</body>
+</html>
