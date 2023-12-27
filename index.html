@@ -4,47 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fee Calculator</title>
-    <!-- Include the PDF.js library -->
-    <script src="pdf.js"></script>
 </head>
 <body>
 
 <canvas id="pdf-canvas"></canvas>
 
-<script>
-  // Check if the pdfjsLib object is available
-  if (typeof pdfjsLib === 'undefined') {
-    console.error('pdfjsLib is not defined. Please check if the pdf.js file is correctly loaded.');
-  } else {
-    // Specify the workerSrc property.
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.js';
+<!-- Load the pdf.mjs as a module -->
+<script type="module">
+  // Import the pdfjsLib from the module
+  import pdfjsLib from './pdf.mjs';
 
-    // Asynchronously downloads PDF.
-    pdfjsLib.getDocument('FeeCalculator.pdf').promise.then(function(pdfDoc_) {
-      // Get the first page
-      return pdfDoc_.getPage(1);
-    }).then(function(page) {
-      // Set the scale (zoom) of the pdf
-      var scale = 1.5;
-      var viewport = page.getViewport({scale: scale});
+  // Ensure the workerSrc is set to use the module version of the worker
+  pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.mjs';
 
-      // Get the canvas element and set its width and height to the page size
-      var canvas = document.getElementById('pdf-canvas');
-      var context = canvas.getContext('2d');
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
+  // Asynchronously downloads PDF
+  pdfjsLib.getDocument('./FeeCalculator.pdf').promise.then(function(pdfDoc_) {
+    // Get the first page
+    return pdfDoc_.getPage(1);
+  }).then(function(page) {
+    var scale = 1.5;
+    var viewport = page.getViewport({scale: scale});
+    var canvas = document.getElementById('pdf-canvas');
+    var context = canvas.getContext('2d');
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
 
-      // Render the page into the canvas context
-      var renderContext = {
-        canvasContext: context,
-        viewport: viewport
-      };
-      page.render(renderContext);
-    }).catch(function(error) {
-      // If an error occurs, log it to the console
-      console.error('Error during PDF rendering:', error);
-    });
-  }
+    // Render PDF page into canvas context
+    var renderContext = {
+      canvasContext: context,
+      viewport: viewport
+    };
+    page.render(renderContext);
+  }).catch(function(error) {
+    console.error('Error during PDF rendering:', error);
+  });
 </script>
 
 </body>
