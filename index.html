@@ -9,21 +9,33 @@
 
 <canvas id="pdf-canvas"></canvas>
 
-<!-- Load the pdf.mjs as a module -->
 <script type="module">
   // Import the pdfjsLib from the module
-  import pdfjsLib from './pdf.mjs';
+  import './pdf.mjs';
 
-  // Ensure the workerSrc is set to use the module version of the worker
-  pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.mjs';
+  // Wait for the module to initialize and assign pdfjsLib to globalThis
+  await new Promise(resolve => {
+    const checkPdfjsLib = setInterval(() => {
+      if (globalThis.pdfjsLib) {
+        clearInterval(checkPdfjsLib);
+        resolve();
+      }
+    }, 100);
+  });
 
-  // Asynchronously downloads PDF
-  pdfjsLib.getDocument('./FeeCalculator.pdf').promise.then(function(pdfDoc_) {
+  const { getDocument } = globalThis.pdfjsLib;
+  const { GlobalWorkerOptions } = globalThis.pdfjsLib;
+
+  // Set the workerSrc to use the module version of the PDF worker
+  GlobalWorkerOptions.workerSrc = './pdf.worker.mjs';
+
+  // Asynchronously download and render the PDF
+  getDocument('FeeCalculator.pdf').promise.then(pdfDoc => {
     // Get the first page
-    return pdfDoc_.getPage(1);
-  }).then(function(page) {
+    return pdfDoc.getPage(1);
+  }).then(page => {
     var scale = 1.5;
-    var viewport = page.getViewport({scale: scale});
+    var viewport = page.getViewport({ scale: scale });
     var canvas = document.getElementById('pdf-canvas');
     var context = canvas.getContext('2d');
     canvas.height = viewport.height;
@@ -35,7 +47,7 @@
       viewport: viewport
     };
     page.render(renderContext);
-  }).catch(function(error) {
+  }).catch(error => {
     console.error('Error during PDF rendering:', error);
   });
 </script>
